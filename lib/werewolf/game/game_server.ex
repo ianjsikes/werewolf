@@ -4,7 +4,9 @@ defmodule Werewolf.GameServer do
 
   defmodule GameState do
     defstruct uuid: nil,
+              owner_id: nil,
               players: %{},
+              player_ids_in_join_order: [],
               player_count: 0
   end
 
@@ -27,8 +29,8 @@ defmodule Werewolf.GameServer do
     GenServer.call({:global, game_uuid}, :state)
   end
 
-  def join(game_uuid, player_name) do
-    response = GenServer.call({:global, game_uuid}, {:join, player_name})
+  def join(game_uuid, player_name, is_owner \\ false) do
+    response = GenServer.call({:global, game_uuid}, {:join, player_name, is_owner})
     Phoenix.PubSub.broadcast(Werewolf.PubSub, "game:" <> game_uuid, :update)
     response
   end
@@ -42,13 +44,15 @@ defmodule Werewolf.GameServer do
     {:reply, state, state}
   end
 
-  def handle_call({:join, player_name}, _from, state) do
-    player = Werewolf.Player.new(player_name)
+  def handle_call({:join, player_name, is_owner}, _from, state) do
+    player = Werewolf.Player.new(player_name, is_owner)
 
     new_state = %{
       state
       | players: Map.put(state.players, player.uuid, player),
-        player_count: state.player_count + 1
+        player_ids_in_join_order: state.player_ids_in_join_order ++ [player.uuid],
+        player_count: state.player_count + 1,
+        owner_id: if(is_owner, do: player.uuid, else: state.owner_id)
     }
 
     {:reply, player, new_state}
@@ -57,8 +61,23 @@ defmodule Werewolf.GameServer do
   def handle_cast({:leave, player_uuid}, state) do
     case Map.fetch(state.players, player_uuid) do
       {:ok, _player} ->
-        new_players = Map.delete(state.players, player_uuid)
-        new_state = %{state | players: new_players, player_count: state.player_count - 1}
+        new_ids_in_join_order = state.player_ids_in_join_order -- [player_uuid]
+        new_owner_id = List.first(new_ids_in_join_order)
+
+        {_, new_players} =
+          state.players
+          |> Map.delete(player_uuid)
+          |> Map.get_and_update(new_owner_id, fn player ->
+            {player, %{player | is_owner: true}}
+          end)
+
+        new_state = %{
+          state
+          | players: new_players,
+            player_count: state.player_count - 1,
+            player_ids_in_join_order: new_ids_in_join_order,
+            owner_id: new_owner_id
+        }
 
         if new_state.player_count == 0 do
           {:stop, :normal, new_state}

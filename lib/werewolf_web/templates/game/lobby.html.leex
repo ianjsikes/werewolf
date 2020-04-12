@@ -1,7 +1,10 @@
 <h3>Room Code: <%= @game_state.uuid %></h3>
 <ul>
   <%= for player <- Map.values(@game_state.players) do %>
-    <li><%= player.name %></li>
+    <li><%= player_title(player, assigns) %></li>
   <% end %>
 </ul>
 <button phx-click="leave_game">Leave Game</button>
+<%= if @player.is_owner do %>
+<button phx-click="start_game" <%= disable_if(length(Map.keys(@game_state.players)) < 4 )%>>Start Game</button>
+<% end %>

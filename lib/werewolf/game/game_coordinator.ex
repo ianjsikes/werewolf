@@ -51,7 +51,7 @@ defmodule Werewolf.GameCoordinator do
   def handle_call({:new_game, player_name}, _from, state) do
     new_game_uuid = Nanoid.generate(5)
     {:ok, new_game_pid} = GameServer.start_link(new_game_uuid)
-    player = GameServer.join(new_game_uuid, player_name)
+    player = GameServer.join(new_game_uuid, player_name, true)
     game_state = GameServer.state(new_game_uuid)
 
     new_state = %{state | games: Map.put(state.games, new_game_uuid, %{pid: new_game_pid})}
