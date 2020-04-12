@@ -1,0 +1,20 @@
+<section class="row">
+  <article class="column">
+    <h2>New Game</h2>
+    <form action="#" phx-change="new_game_change" phx-submit="new_game_submit">
+      <label for="player_name">Name</label>
+      <input type="text" name="player_name" value="<%= @new_game_player_name %>" />
+      <button type="submit" phx-disable-with="Creating...">Create Game</button>
+    </form>
+  </article>
+  <article class="column">
+    <h2>Join Game</h2>
+    <form action="#" phx-change="join_game_change" phx-submit="join_game_submit">
+      <label for="player_name">Name</label>
+      <input type="text" name="player_name" value="<%= @join_game_player_name %>" />
+      <label for="room_code">Room Code</label>
+      <input type="text" name="room_code" value="<%= @join_game_room_code %>" />
+      <button type="submit" phx-disable-with="Joining...">Join Game</button>
+    </form>
+  </article>
+</section>

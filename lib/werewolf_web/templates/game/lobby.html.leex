@@ -1,0 +1,7 @@
+<h3>Room Code: <%= @game_state.uuid %></h3>
+<ul>
+  <%= for player <- Map.values(@game_state.players) do %>
+    <li><%= player.name %></li>
+  <% end %>
+</ul>
+<button phx-click="leave_game">Leave Game</button>

@@ -33,6 +33,7 @@ defmodule Werewolf.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:nanoid, "~> 2.0.2"},
       {:phoenix, github: "phoenixframework/phoenix", override: true},
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.4"},
